@@ -56,7 +56,7 @@ def check_availability():
     else:
         print(f"Invalid seat {seat}.")
 
-
+# Function to book a seat
 def book_seat():
     seat = input("Enter seat (e.g., A1): ")
     seat = normalize_seat(seat)
