@@ -1,3 +1,6 @@
+import random
+import string
+
 # Initialize an empty dictionary to store the seat map.
 seat_map = {}
 
@@ -14,6 +17,9 @@ for row in rows:
             seat_map[row + col] = 'X'  # Placeholder for future aisle handling, currently not active.
         else:
             seat_map[row + col] = 'F'  # All other seats are marked as free.
+# Define a dictionary to store booking details
+booking_details = {}
+
 
 # Function to ensure the seat input is in the correct format (e.g., A1).
 def normalize_seat(seat):
@@ -25,40 +31,65 @@ def normalize_seat(seat):
     else:
         return None
 
-# Function to check the availability of a seat.
+
+# Function to generate a random booking reference
+def generate_booking_reference(existing_references):
+    # Continuously generate new references until a unique one is found
+    while True:
+        # Generate a random string of 8 characters, choosing from uppercase letters and digits
+        reference = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+
+        # Check if the generated reference is not already in the list of existing references
+        if reference not in existing_references:
+            # If the reference is unique, return it and break out of the loop
+            return reference
+
+
+# Function to check seat availability
 def check_availability():
     seat = input("Enter seat (e.g., A1): ")
     seat = normalize_seat(seat)
     if seat and seat_map.get(seat) == 'F':
         print(f"Seat {seat} is available.")
-    elif seat and seat_map.get(seat) == 'R':
-        print(f"Seat {seat} is not available.")
+    elif seat and seat_map.get(seat) in booking_details:
+        print(f"Seat {seat} is already booked with reference {seat_map[seat]}.")
     else:
         print(f"Invalid seat {seat}.")
 
-# Function to book a seat.
+
 def book_seat():
     seat = input("Enter seat (e.g., A1): ")
     seat = normalize_seat(seat)
     if seat and seat_map.get(seat) == 'F':
-        seat_map[seat] = 'R'  # Mark the seat as reserved.
-        print(f"Seat {seat} booked successfully.")
-    elif seat and seat_map.get(seat) == 'R':
+        booking_ref = generate_booking_reference(booking_details.keys())  # Generate a booking reference
+        # Store booking reference and customer data
+        booking_details[booking_ref] = {
+            'seat': seat,
+            'passport_number': input("Enter passport number: "),
+            'first_name': input("Enter first name: "),
+            'last_name': input("Enter last name: ")
+        }
+        seat_map[seat] = booking_ref  # Update seat status with booking reference
+        print(f"Seat {seat} booked successfully with reference {booking_ref}.")
+    elif seat and seat_map.get(seat) != 'F':
         print(f"Seat {seat} is already booked.")
     else:
         print(f"Invalid seat {seat}.")
+
 
 # Function to free a reserved seat.
 def free_seat():
     seat = input("Enter seat (e.g., A1): ")
     seat = normalize_seat(seat)
-    if seat and seat_map.get(seat) == 'R':
-        seat_map[seat] = 'F'  # Mark the seat as free again.
+    if seat and seat_map.get(seat) in booking_details:
+        del booking_details[seat_map[seat]]  # Remove booking details
+        seat_map[seat] = 'F'  # Free the seat
         print(f"Seat {seat} freed successfully.")
-    elif seat and seat_map.get(seat) == 'F':
+    elif seat and seat_map.get(seat) != 'R':
         print(f"Seat {seat} is already free.")
     else:
         print(f"Invalid seat {seat}.")
+
 
 # Function to display the current booking state of all seats.
 def show_booking_state():
@@ -67,10 +98,15 @@ def show_booking_state():
     for i, col in enumerate(cols):
         print(f"{col:<3}", end='')  # Print column numbers.
         for row in rows:
-            print(seat_map[row + col], end='  ')  # Print seat states.
+            seat = row + col
+            if seat_map[seat] == 'F' or seat_map[seat] == 'S':
+                print(seat_map[seat], end='  ')  # Print seat states as 'F' or 'S'.
+            else:
+                print('R', end='  ')  # Print 'R' for reserved/booked seats.
             if row == 'C':
                 print("X", end='  ')  # Print an aisle marker.
         print()  # Start a new line after each column.
+
 
 # Main menu loop for user interaction.
 while True:
@@ -95,3 +131,4 @@ while True:
         break  # Exit the loop to end the program.
     else:
         print("Invalid choice. Please try again.")  # Handle invalid inputs.
+
